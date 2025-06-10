@@ -5,13 +5,12 @@ import madstodolist.dto.LoginData;
 import madstodolist.dto.RegistroData;
 import madstodolist.dto.UsuarioData;
 import madstodolist.service.UsuarioService;
+import madstodolist.service.UsuarioService.LoginStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
@@ -20,76 +19,77 @@ import javax.validation.Valid;
 public class LoginController {
 
     @Autowired
-    UsuarioService usuarioService;
+    private UsuarioService usuarioService;
 
     @Autowired
-    ManagerUserSession managerUserSession;
+    private ManagerUserSession managerUserSession;
 
     @GetMapping("/")
-    public String home(Model model) {
+    public String redireccionarLogin() {
         return "redirect:/login";
     }
 
     @GetMapping("/login")
-    public String loginForm(Model model) {
+    public String mostrarFormularioLogin(Model model) {
         model.addAttribute("loginData", new LoginData());
         return "formLogin";
     }
 
     @PostMapping("/login")
-    public String loginSubmit(@ModelAttribute LoginData loginData, Model model, HttpSession session) {
+    public String procesarLogin(@ModelAttribute LoginData loginData, Model model) {
+        LoginStatus status = usuarioService.login(loginData.geteMail(), loginData.getPassword());
 
-        // Llamada al servicio para comprobar si el login es correcto
-        UsuarioService.LoginStatus loginStatus = usuarioService.login(loginData.geteMail(), loginData.getPassword());
+        switch (status) {
+            case LOGIN_OK:
+                UsuarioData usuario = usuarioService.findByEmail(loginData.geteMail());
+                managerUserSession.logearUsuario(usuario.getId());
+                return "redirect:/usuarios/" + usuario.getId() + "/tareas";
 
-        if (loginStatus == UsuarioService.LoginStatus.LOGIN_OK) {
-            UsuarioData usuario = usuarioService.findByEmail(loginData.geteMail());
+            case USER_NOT_FOUND:
+                model.addAttribute("error", "No existe usuario");
+                break;
 
-            managerUserSession.logearUsuario(usuario.getId());
-
-            return "redirect:/usuarios/" + usuario.getId() + "/tareas";
-        } else if (loginStatus == UsuarioService.LoginStatus.USER_NOT_FOUND) {
-            model.addAttribute("error", "No existe usuario");
-            return "formLogin";
-        } else if (loginStatus == UsuarioService.LoginStatus.ERROR_PASSWORD) {
-            model.addAttribute("error", "Contraseña incorrecta");
-            return "formLogin";
+            case ERROR_PASSWORD:
+                model.addAttribute("error", "Contraseña incorrecta");
+                break;
         }
+
         return "formLogin";
     }
 
     @GetMapping("/registro")
-    public String registroForm(Model model) {
+    public String mostrarFormularioRegistro(Model model) {
         model.addAttribute("registroData", new RegistroData());
         return "formRegistro";
     }
 
-   @PostMapping("/registro")
-   public String registroSubmit(@Valid RegistroData registroData, BindingResult result, Model model) {
+    @PostMapping("/registro")
+    public String procesarRegistro(@Valid @ModelAttribute RegistroData registroData,
+            BindingResult result,
+            Model model) {
 
         if (result.hasErrors()) {
             return "formRegistro";
         }
 
         if (usuarioService.findByEmail(registroData.getEmail()) != null) {
-            model.addAttribute("registroData", registroData);
             model.addAttribute("error", "El usuario " + registroData.getEmail() + " ya existe");
             return "formRegistro";
         }
 
-        UsuarioData usuario = new UsuarioData();
-        usuario.setEmail(registroData.getEmail());
-        usuario.setPassword(registroData.getPassword());
-        usuario.setFechaNacimiento(registroData.getFechaNacimiento());
-        usuario.setNombre(registroData.getNombre());
+        UsuarioData nuevoUsuario = new UsuarioData();
+        nuevoUsuario.setEmail(registroData.getEmail());
+        nuevoUsuario.setPassword(registroData.getPassword());
+        nuevoUsuario.setFechaNacimiento(registroData.getFechaNacimiento());
+        nuevoUsuario.setNombre(registroData.getNombre());
 
-        usuarioService.registrar(usuario);
+        usuarioService.registrar(nuevoUsuario);
         return "redirect:/login";
-   }
+    }
 
-   @GetMapping("/logout")
-   public String logout(HttpSession session) {
+    @GetMapping("/logout")
+    public String cerrarSesion(HttpSession session) {
         managerUserSession.logout();
         return "redirect:/login";
-   }
+    }
 }
