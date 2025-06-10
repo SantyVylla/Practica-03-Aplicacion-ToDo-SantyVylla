@@ -1,66 +1,68 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
 
 <head th:replace="fragments :: head (titulo='Registro')"></head>
 
 <body>
-<div class="container-fluid">
 
-    <div class="row justify-content-center mb-3">
-        <div class="col-auto">
-            <h2>Registro nuevo usuario</h2>
-        </div>
-    </div>
+    <main class="container my-5">
 
-    <div class="row justify-content-center">
-        <div class="col-6">
-            <form method="post" th:action="@{/registro}" th:object="${registroData}">
-                <div class="row justify-content-center">
-                    <div class="col-6">
-                        <div class="form-group">
-                            <label for="eMail">Correo electrónico</label>
-                            <input id="eMail" class="form-control" name="eMail" placeholder="Correo electrónico"
-                                   type="text" th:field="*{email}" required/>
-                        </div>
-                        <div class="form-group">
-                            <label for="nombre">Nombre</label>
-                            <input id="nombre" class="form-control" name="nombre" placeholder="Nombre" type="text"
-                                   th:field="*{nombre}"/>
-                        </div>
-                        <div class="form-group">
-                            <label for="password">Contraseña</label>
-                            <input id="password" class="form-control" name="password" placeholder="Contraseña"
-                                   type="password" th:field="*{password}" required/>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="fechaNacimiento">Fecha de nacimiento</label>
-                            <input id="fechaNacimiento" class="form-control" name="fechaNacimiento"
-                                   placeholder="01-12-2019" th:field="*{fechaNacimiento}"/>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary">Registro</button>
-                        <a class="btn btn-link" href="/login">Ir a login</a>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-    <div class="row mt-3 justify-content-center">
-        <div class="col-9">
-            <div th:object="${registroData}">
-                <ul th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
-                    <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
-                </ul>
+        <div class="row justify-content-center mb-4">
+            <div class="col-auto">
+                <h2 class="fw-bold">Registro nuevo usuario</h2>
             </div>
-            <ul th:if="${error != null}" class="alert alert-danger">
-                <li th:text="${error}"></li>
-            </ul>
         </div>
-    </div>
-</div>
 
-<div th:replace="fragments::javascript"/>
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <form method="post" th:action="@{/registro}" th:object="${registroData}" novalidate>
+
+                    <div class="mb-3">
+                        <label for="eMail" class="form-label">Correo electrónico</label>
+                        <input id="eMail" type="email" class="form-control" name="email"
+                            placeholder="Correo electrónico" th:field="*{email}" required autofocus>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label">Nombre</label>
+                        <input id="nombre" type="text" class="form-control" name="nombre" placeholder="Nombre"
+                            th:field="*{nombre}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Contraseña</label>
+                        <input id="password" type="password" class="form-control" name="password"
+                            placeholder="Contraseña" th:field="*{password}" required>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="fechaNacimiento">Fecha de nacimiento</label>
+                        <input id="fechaNacimiento" class="form-control" name="fechaNacimiento" placeholder="01-12-2019"
+                            th:field="*{fechaNacimiento}" />
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <button type="submit" class="btn btn-primary">Registrar</button>
+                        <a class="btn btn-link p-0" href="/login">Ir a login</a>
+                    </div>
+
+                    <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger" role="alert">
+                        <ul class="mb-0">
+                            <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
+                        </ul>
+                    </div>
+
+                    <div th:if="${error != null}" class="alert alert-danger mt-3" role="alert" th:text="${error}"></div>
+
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+    <div th:replace="fragments :: javascript"></div>
 
 </body>
+
 </html>
